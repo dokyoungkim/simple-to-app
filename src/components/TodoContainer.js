@@ -3,12 +3,33 @@ import TodosList from "./TodosList";
 import Header from "./Header";
 import InputTodo from "./InputTodo";
 import { v4 as uuidv4 } from "uuid";
+import axios from "axios";
 
 class TodoContainer extends React.Component {
+
+  // state management.
+  state = {
+    todos: [],
+    show: false
+  };  
+
+  componentDidMount() {
+    axios.get("https://jsonplaceholder.typicode.com/todos?_limit=10")
+      .then(response => this.setState({ todos: response.data }));
+  }
+    // componentDidMount() {
+    //   axios.get("https://jsonplaceholder.typicode.com/todos", {
+    //       params: {
+    //         _limit: 10
+    //       }
+    //     })
+    //     .then(response => console.log(response.data));
+    // }    
+
     render() {
         return (
             <div className="container">
-                <Header/>
+                <Header headerSpan={this.state.show} />
                 <InputTodo addTodoProps={this.addTodoItem}/>
                 <TodosList todos={this.state.todos} handleChangeProps={this.handleChange} deleteTodoProps={this.delTodo}/>
             </div>
@@ -16,57 +37,62 @@ class TodoContainer extends React.Component {
     };
 
     handleChange = id => {
-        this.setState({
-          todos: this.state.todos.map(todo => {
-            if (todo.id === id) {
-              todo.completed = !todo.completed;
-            }
-            return todo;
-          })
-        });
-      };
+      this.setState({
+        todos: this.state.todos.map(todo => {
+          if (todo.id === id) {
+            todo.completed = !todo.completed
+          }
+          return todo
+        }),
+        show: !this.state.show,
+      })
+    }
 
+      // delTodo = id => {
+      //   this.setState({
+      //     todos: [
+      //       ...this.state.todos.filter(todo => {
+      //         return todo.id !== id;
+      //       })
+      //     ]
+      //   });
+      // };
       delTodo = id => {
-        this.setState({
-          todos: [
-            ...this.state.todos.filter(todo => {
-              return todo.id !== id;
+        axios
+          .delete('https://jsonplaceholder.typicode.com/todos/${id}')
+          .then(reponse =>
+            this.setState({
+              todos: [
+                ...this.state.todos.filter(todo => {
+                  return todo.id !== id
+                }),
+              ],
             })
-          ]
-        });
-      };
-
+          )
+      }
+      // addTodoItem = title => {
+      //   var newTodo = {
+      //     id: uuidv4(),
+      //     title: title,
+      //     completed: false
+      //   };
+      //   this.setState({
+      //     todos: [...this.state.todos, newTodo]
+      //   });
+      // };
       addTodoItem = title => {
-        var newTodo = {
-          id: uuidv4(),
-          title: title,
-          completed: false
-        };
-        this.setState({
-          todos: [...this.state.todos, newTodo]
-        });
-      };
+        axios
+          .post("https://jsonplaceholder.typicode.com/todos", {
+            title: title,
+            completed: false,
+          })
+          .then(response =>
+            this.setState({
+              todos: [...this.state.todos, response.data],
+            })
+          )
+      }
 
-  // state management.
-    state = {
-        todos: [
-        {
-            id: 1,
-            title: "Step one",
-            completed: true
-        },
-        {
-            id: 2,
-            title: "Step two",
-            completed: false
-        },
-        {
-            id: 3,
-            title: "Step three",
-            completed: false
-        }
-        ]
-    };  
    
 }
 export default TodoContainer
